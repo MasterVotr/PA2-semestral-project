@@ -1,0 +1,102 @@
+EUGOR (Grafické RPG)
+====================
+Autor: Jakub Votrubec
+
+==> Téma z Progtestu
+
+Naprogramujte engine pro grafické RPG
+
+Váš engine:
+
+1. ze souboru nahraje definici světa (mapu, předměty, příšery, ...)
+2. umožní vytvořit herní postavu (její atributy) a následnou hru
+3. implementuje jednoduchý soubojový systém a inventář
+4. umožňuje ukládat a načítat rozehrané hry
+5. Engine bude fungovat jako realtimová nebo tahová hra.
+
+Jak může vypadat mapa?
+
+# označuje zeď, T označuje truhlu s pokladem, > označuje pozici (směr otočení) hráče.
+
+###################
+# T   #      #    #
+#           ###   #
+#     ##   #      #
+#     #       # > #
+###################
+
+Kde lze využít polymorfismus? (doporučené)
+
+Soubojové vlastnosti: postava, příšera, stroj (např. past, bomba,...)
+Efekty akcí: souboje, události (pád ze stromu,...), přechod do jiné místnosti
+Inventář: postava, batoh, toulec, kapsa
+Uživatelské rozhraní: konzole, ncurses, SDL, OpenGL (různé varianty), ...
+
+== Zadání hry EUGOR
+
+Vytvoříme hru "EUGOR", hráč si bude moci vytvořit postavu a za ní se pak pokusí
+uniknout ze zhoubného podzemního sídla lorda Eugora, který tu hráče uvěznil.
+
+Mapa úrovně může vypadat nějak takto:
+
+```
+                                                                                              
+  ------------                   -------------------------        ------                      
+  │.$......H.│                 ##+..........g............+########+...F|                      
+  │....@.....|                 # |....................$..│        |..b.|                      
+  │.F........+################## |...a...................|        --+---                      
+  │.....w....|                 # --------------+----------          #                         
+  ------------                 #               #                    #                         
+                               #               #                    #    ------------------   
+                               #               #                    #####+........s.......|   
+                               #        -------+--------------------     |................|   
+       ----------------        #        |......b...................|     |..h.............|   
+       |..............|        #        |..........................|     -------------+----   
+       |......F..b....|        #        |.........>...m............|                  #       
+       |..............+####### #        |..........................|             ######       
+       -+--------------                 |...................b......|             #            
+        #                               --------------------+-------         ----+--          
+        #########################                           #                |.....|          
+                                #                           #                |.g...|          
+  ------------------------------+-                ---------0-+------------   |...b.|          
+  |.................s............|           #####+.....................|  ##+.....|          
+  |.l............................|           #    |....s....r....s......|  # |.....|          
+  |..............................+############    |.....................+### |..H..|          
+  --------------------------------                -----------------------    -------          
+                                                                                            
+```
+
+Písmena a znaky reprezentují jednotlivé předměty, příšery a hráče. Například hráč je
+reprezentován znakem '@'
+
+Hráč se pohybuje pomocí šipek na klávesnici, sbírá zlato a předměty, které mu
+vylepšují jeho životy, brnění a udělené poškození. Dále může sbírat předměty, které
+doplňují jídlo a životy. V podzemí bude muset hráč přemáhat lecjaké příšery, aby
+se dostal ven z komplexu.
+
+Všechny složitější části mapy (předměty, příšery, hráč,..) jsou potomkem třídy CTile
+a udržují si vždy polohu a písmeno/znak, který je reprezentuje. Dále se díly mapy
+rozdělují na ty, které se mohou pohybovat (CMovable) a ty které nemohou(CStatic).
+Tím zajišťuji, že mohu integrovat přes všechny postavy, které dědí CMovable
+a můžu je přesouvat pomocí děděné metody move(), dle předem dané logiky (základní AI).
+
+Hráč je realizován pomocí třídy CPlayer, která udržuje jeho atributy a polohu. Dále
+také tato třída využívá tříd CWeapon, CInventory a CWear pro udržování hráčova vybavení
+a inventáře.
+
+== Použití polymorfismu
+
+Jednotlivé věci ve vlastnictví hráče, ale i ty na zemi, jsou realizovány jako potomci
+třídy CItem. Tato třída obsahuje abstraktní metodu useItem, kterou každý její potomek
+implementuje jinak. Například u objektů typu CWearable je implementována metoda useItem 
+jako "nasazení" předmětu. Dále u objektů typu CWeapon se metoda use implementuje jako
+"vzít do ruky". V neposlední řadě u objektů typu CConsumable metodu use můžeme chápat
+jako "sníst/vypít".
+
+Další malé využití polymorfismu je u všech potomků třídy CTile, například u metody draw(). 
+Každý objekt musí zjistit, zdali je v inventáři nebo na herní ploše. Pokud je na herní
+ploše vypíše se jeho specifickou barvou.
+
+Poslední využití  polymorfismu je u pohybu objektů (metoda move()) typu CMovable, CPlayer
+se pohybuje jinak, nežli CBeast, který je závislí na proměnné m_Pathfinding, který určuje 
+jak se příšera pohybuje.
